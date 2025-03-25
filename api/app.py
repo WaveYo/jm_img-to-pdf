@@ -6,6 +6,7 @@ import subprocess
 import os
 import logging
 import yaml
+import requests
 from jmcomic import JmApiClient  # 导入 JM 客户端
 
 # 配置日志记录
@@ -16,6 +17,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'  # 时间格式
 )
 
+# 定义 FastAPI 应用
 app = FastAPI()
 
 # 加载配置文件
@@ -23,6 +25,24 @@ with open("config.yml", "r", encoding="utf8") as f:
     config = yaml.safe_load(f)
 
 logger = logging.getLogger(__name__)
+
+class Postman:
+    """自定义 Postman 类，兼容 JmApiClient 的要求"""
+    def __init__(self):
+        self.session = requests.Session()
+
+    def get_meta_data(self, url, headers=None):
+        """获取 URL 的元数据"""
+        logger.info(f"调用 get_meta_data() 方法，参数: url={url}, headers={headers}")
+        response = self.session.head(url, headers=headers)
+        return {
+            'content_length': response.headers.get('Content-Length'),
+            'content_type': response.headers.get('Content-Type')
+        }
+
+    def send_request(self, url, method='GET', **kwargs):
+        """发送 HTTP 请求"""
+        return self.session.request(method, url, **kwargs)
 
 class ComicRequest(BaseModel):
     """漫画生成请求参数"""
@@ -62,13 +82,15 @@ async def generate_pdf(request: ComicRequest):
 
         # 从 JM 服务器抓取数据
         domain_list = config['client']['domain_list']  # 从配置中读取域名列表
-        client = JmApiClient(domain_list=domain_list)  # 初始化 JmApiClient
+        postman = Postman()  # 使用自定义 Postman 类
+        client = JmApiClient(domain_list=domain_list, postman=postman)  # 初始化 JmApiClient
         image_urls = client.fetch_album(request.album_id)  # 获取图片 URL 列表
 
         # 下载图片
         for index, url in enumerate(image_urls):
             image_path = os.path.join(temp_dir, f"{index + 1}.jpg")
-            client.download_image(url, image_path)  # 下载图片到本地
+            headers = {'User-Agent': 'Mozilla/5.0'}  # 自定义请求头
+            meta_data = postman.get_meta_data(url, headers)
             logger.info(f"下载图片成功: {image_path}")
 
         # 合成 PDF
@@ -100,7 +122,7 @@ async def generate_pdf(request: ComicRequest):
                 "message": "PDF生成成功",
                 "data": {
                     "pdf_path": pdf_path,
-                    "download_url": f"http://127.0.0.1:5302/download/{request.album_id}.pdf"
+                    "下载URL": f"http://127.0.0.1:5302/download/{request.album_id}.pdf"
                 }
             }
         )
