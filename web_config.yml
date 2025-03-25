@@ -1,0 +1,4 @@
+server:
+  host: 0.0.0.0       # 监听所有 IP
+  port: 3502           # API 端口
+  domain: localhost    # 域名或 IP，用于生成下载链接

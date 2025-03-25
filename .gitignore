@@ -1,5 +1,5 @@
-api/__pycache__
-image2pdf/__pycache__
+pdf_maker/__pycache__/
+downloader/__pycache__/
 venv/
-api.log
-image_to_pdf.log
+temp/
+
