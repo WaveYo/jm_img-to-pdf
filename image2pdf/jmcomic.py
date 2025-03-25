@@ -1,11 +1,7 @@
-# /image2pdf/jmcomic.py
-
 import requests
 import os
-import time
 import logging
 from tenacity import (
-
     retry,
     stop_after_attempt,
     wait_exponential,
@@ -44,17 +40,31 @@ class JmClient:
         """获取漫画数据（带错误处理）"""
         url = f"https://{self.config['client']['domain'][0]}/album/{album_id}"
         try:
+            self.logger.info(f"开始获取漫画数据，album_id: {album_id}")
             response = self.session.get(
                 url,
                 headers=self._build_headers(),
                 timeout=30
             )
             response.raise_for_status()
-            return self._parse_response(response)
+            return self._parse_response(response)  # 返回图片 URL 列表
         except requests.HTTPError as e:
             self._handle_http_error(e, album_id)
         except Exception as e:
             self.logger.error(f"未知错误: {str(e)}")
+            raise
+
+    def download_image(self, url, save_path):
+        """下载图片到本地"""
+        try:
+            self.logger.info(f"开始下载图片: {url}")
+            response = self.session.get(url, timeout=30)
+            response.raise_for_status()
+            with open(save_path, 'wb') as f:
+                f.write(response.content)
+            self.logger.info(f"图片下载成功: {save_path}")
+        except Exception as e:
+            self.logger.error(f"图片下载失败: {str(e)}")
             raise
 
     def _build_headers(self):
@@ -66,8 +76,8 @@ class JmClient:
 
     def _parse_response(self, response):
         """解析响应数据"""
-        # 这里添加实际解析逻辑
-        return {"images": []}
+        # 这里添加实际解析逻辑，返回图片 URL 列表
+        return ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
 
     def _handle_http_error(self, error, album_id):
         """处理HTTP错误"""
@@ -105,22 +115,3 @@ class JmApiError(Exception):
         self.error_type = error_info.get('type', 'unknown_error')
         self.message = error_info.get('message', '未知错误')
         self.suggestion = error_info.get('suggestion')
-
-class ImageProcessor:
-    """图片处理模块"""
-    
-    def __init__(self, config):
-        self.config = config['download']
-        
-    def decode_image(self, img_data):
-        """图片解码逻辑"""
-        if self.config['image']['decode']:
-            # 添加实际的解码实现
-            return img_data
-        return img_data
-
-    def convert_format(self, img_path):
-        """格式转换"""
-        if self.config['image']['suffix']:
-            # 添加格式转换逻辑
-            pass

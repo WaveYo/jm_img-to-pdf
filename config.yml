@@ -4,18 +4,21 @@
 version: '2.0'
 
 dir_rule:
-  base_dir: ./temp # 下载目录
+  base_dir: temp # 下载目录
   rule: Bd_Atitle_Pindex
 
 client:
-  domain:
-    - 18comic.vip
-    - 18comic.org
-    - jmcomic-zzz.org
-    - 18comic-mygo.vip
-    - 18comic-MHWs.CC
-    - 18comic-mygo.org
-    - jmcomic-zzz.one
+  domain_list: ["jmcomic1.org", "jmcomic2.org"]
+  # domain_list:
+  # [
+  #   "18comic.vip",
+  #   "18comic.org",
+  #   "jmcomic-zzz.org",
+  #   "18comic-mygo.vip",
+  #   "18comic-MHWs.CC",
+  #   "18comic-mygo.org",
+  #   "jmcomic-zzz.one"
+  # ]
 
 download:
   cache: true # 如果要下载的文件在磁盘上已存在，不用再下一遍了吧？

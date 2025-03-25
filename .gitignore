@@ -2,3 +2,4 @@ api/__pycache__
 image2pdf/__pycache__
 venv/
 api.log
+image_to_pdf.log
